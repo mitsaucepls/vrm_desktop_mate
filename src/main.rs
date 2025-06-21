@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 use bevy::window::{WindowMode, WindowPosition};
 use bevy::winit::WinitWindows;
+use bevy_vrm::{VrmPlugins, VrmBundle, VrmInstance, VrmScene, loader::Vrm};
 
 #[derive(Component)]
-struct RotatingCube;
+struct RotatingVrmModel;
 
 #[derive(Resource)]
 struct ScreenBounds {
@@ -17,7 +18,7 @@ struct ScreenBounds {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
+        .add_plugins((DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 transparent: true,
                 decorations: false,
@@ -27,33 +28,37 @@ fn main() {
                 focused: false,
                 skip_taskbar: true,
                 window_theme: Some(bevy::window::WindowTheme::Dark),
-                composite_alpha_mode: bevy::window::CompositeAlphaMode::PreMultiplied,
                 ..default()
             }),
             ..default()
-        }))
+        }).set(AssetPlugin {
+            meta_check: bevy::asset::AssetMetaCheck::Never,
+            ..default()
+        }), VrmPlugins))
         .insert_resource(ClearColor(Color::srgba(0.0, 0.0, 0.0, 0.0)))
         .add_systems(Startup, setup)
-        .add_systems(Update, (rotate_cube, move_window))
+        .add_systems(Update, (rotate_vrm_model, move_window))
         .add_systems(Update, init_screen_bounds_delayed.run_if(run_once))
         .run();
 }
 
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
-        MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-        Transform::from_xyz(0.0, 0.5, 0.0),
-        RotatingCube,
+        VrmBundle {
+            scene: VrmScene::default(),
+            vrm: VrmInstance(asset_server.load("model.vrm")),
+            ..default()
+        },
+        RotatingVrmModel,
     ));
 
     commands.spawn((
         PointLight {
             shadows_enabled: true,
+            intensity: 2000.0,
             ..default()
         },
         Transform::from_xyz(4.0, 8.0, 4.0),
@@ -61,11 +66,11 @@ fn setup(
 
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(0.0, 1.5, 3.0).looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y),
     ));
 }
 
-fn rotate_cube(mut query: Query<&mut Transform, With<RotatingCube>>, time: Res<Time>) {
+fn rotate_vrm_model(mut query: Query<&mut Transform, With<RotatingVrmModel>>, time: Res<Time>) {
     for mut transform in &mut query {
         transform.rotate_y(time.delta_secs() * 0.5);
     }
