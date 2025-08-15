@@ -5,4 +5,4 @@ edition = "2024"
 
 [dependencies]
 bevy = "0.16.1"
-bevy_vrm1 = { git = "https://github.com/mitsaucepls/bevy_vrm1", version = "0.2.1" }
+bevy_vrm1 = { git = "https://github.com/not-elm/bevy_vrm1.git", version = "0.3.0-dev" }

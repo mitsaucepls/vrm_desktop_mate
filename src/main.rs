@@ -19,6 +19,7 @@ fn main() {
                         focused: false,
                         skip_taskbar: true,
                         window_theme: Some(bevy::window::WindowTheme::Dark),
+                        resolution: (600.0, 915.0).into(),
                         ..default()
                     }),
                     ..default()
